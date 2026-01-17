@@ -1,12 +1,14 @@
 import { create } from 'zustand';
-import type { 
-  WizardState, 
-  WizardActions, 
+import type {
+  WizardState,
+  WizardActions,
   WizardStep,
   ProjectBlueprint,
   SoundProfile,
   DeliveryAndControl,
-  AudioResult
+  AudioResult,
+  EditorMode,
+  CompositionPlanData
 } from '@/types';
 
 const initialState: WizardState = {
@@ -22,6 +24,7 @@ const initialState: WizardState = {
   compositionPlanText: '',
   compositionPlanObject: null,
   planJsonError: null,
+  editorMode: 'visual',
   audioResult: null,
   isGeneratingPrompt: false,
   isGeneratingPlan: false,
@@ -82,22 +85,42 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
   validateAndSetPlan: (text: string) => {
     try {
       const parsed = JSON.parse(text);
-      set({ 
-        compositionPlanText: text, 
-        compositionPlanObject: parsed, 
-        planJsonError: null 
+      set({
+        compositionPlanText: text,
+        compositionPlanObject: parsed,
+        planJsonError: null
       });
       return true;
     } catch (e) {
       const error = e instanceof Error ? e.message : 'Invalid JSON';
-      set({ 
-        compositionPlanText: text, 
-        compositionPlanObject: null, 
-        planJsonError: error 
+      set({
+        compositionPlanText: text,
+        compositionPlanObject: null,
+        planJsonError: error
       });
       return false;
     }
   },
+
+  updatePlanObject: (updater: (plan: CompositionPlanData) => CompositionPlanData) => {
+    const { compositionPlanObject } = get();
+    if (!compositionPlanObject) return;
+
+    try {
+      const updated = updater(compositionPlanObject as CompositionPlanData);
+      const text = JSON.stringify(updated, null, 2);
+      set({
+        compositionPlanObject: updated,
+        compositionPlanText: text,
+        planJsonError: null
+      });
+    } catch (e) {
+      const error = e instanceof Error ? e.message : 'Failed to update plan';
+      set({ planJsonError: error });
+    }
+  },
+
+  setEditorMode: (mode: EditorMode) => set({ editorMode: mode }),
 
   // Results
   setAudioResult: (result: AudioResult | null) => set({ audioResult: result }),

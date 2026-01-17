@@ -60,14 +60,51 @@ export const DELIVERY_AND_CONTROL_OPTIONS: SelectionOption<DeliveryAndControl>[]
 ];
 
 /**
- * {{COMPOSITION_PLAN_JSON_SCHEMA}}
- * 
+ * Composition Plan Types
+ *
  * The composition plan contains:
  * - composition_plan: object with global styles and sections
  * - song_metadata: title, description, genres, etc.
  * - words_timestamps: optional timing data
  */
-export type CompositionPlan = Record<string, unknown>;
+
+// Section within the composition plan
+export interface Section {
+  name: string;
+  duration_ms: number;
+  positive_style?: string[];
+  negative_style?: string[];
+  lines?: string[];
+}
+
+// The core composition plan structure
+export interface CompositionPlanCore {
+  positive_style?: string[];
+  negative_style?: string[];
+  sections: Section[];
+}
+
+// Song metadata
+export interface SongMetadata {
+  title?: string;
+  description?: string;
+  genres?: string[];
+  moods?: string[];
+  tags?: string[];
+}
+
+// Full composition plan data structure
+export interface CompositionPlanData {
+  composition_plan: CompositionPlanCore;
+  song_metadata?: SongMetadata;
+  words_timestamps?: Record<string, unknown>;
+}
+
+// Generic type for backwards compatibility
+export type CompositionPlan = CompositionPlanData | Record<string, unknown>;
+
+// Editor mode for visual vs JSON editing
+export type EditorMode = 'visual' | 'json';
 
 export interface AudioResult {
   audioUrl: string;
@@ -82,22 +119,23 @@ export type WizardStep = 0 | 1 | 2 | 3;
 export interface WizardState {
   // Current step
   currentStep: WizardStep;
-  
+
   // Step 0 data
   userNarrative: string;
-  
+
   // Step 1 data
   selections: Selections;
-  
+
   // Step 2 data
   promptText: string;
   compositionPlanText: string;
   compositionPlanObject: CompositionPlan | null;
   planJsonError: string | null;
-  
+  editorMode: EditorMode;
+
   // Step 3 data
   audioResult: AudioResult | null;
-  
+
   // Loading states
   isGeneratingPrompt: boolean;
   isGeneratingPlan: boolean;
@@ -124,6 +162,8 @@ export interface WizardActions {
   setPromptText: (text: string) => void;
   setCompositionPlanText: (text: string) => void;
   validateAndSetPlan: (text: string) => boolean;
+  updatePlanObject: (updater: (plan: CompositionPlanData) => CompositionPlanData) => void;
+  setEditorMode: (mode: EditorMode) => void;
   
   // Results
   setAudioResult: (result: AudioResult | null) => void;
