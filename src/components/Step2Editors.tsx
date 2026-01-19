@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, Music, RefreshCw, Code2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,7 +67,6 @@ export function Step2Editors() {
     editorMode,
     setEditorMode,
     setAudioResult,
-    prevStep,
     nextStep,
     isGeneratingPlan,
     setIsGeneratingPlan,
@@ -169,42 +168,31 @@ export function Step2Editors() {
       className="space-y-8"
     >
       {/* Header */}
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-start justify-between gap-6 mb-6">
-          <Button variant="ghost" onClick={prevStep} className="shrink-0">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-
-          <div className="text-center flex-1">
-            <motion.span
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.4 }}
-              className="inline-block text-xs uppercase tracking-[0.3em] text-primary font-medium mb-3"
-            >
-              Step Three
-            </motion.span>
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.4 }}
-              className="font-display text-3xl md:text-4xl text-foreground mb-2"
-            >
-              Compose Your <span className="italic text-primary">Music</span>
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-              className="text-muted-foreground"
-            >
-              Generate and refine your composition plan
-            </motion.p>
-          </div>
-
-          <div className="w-[72px] shrink-0" />
-        </div>
+      <div className="max-w-4xl mx-auto text-center mb-6">
+        <motion.span
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="inline-block text-xs uppercase tracking-[0.3em] text-primary font-medium mb-3"
+        >
+          Step Three
+        </motion.span>
+        <motion.h2
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.4 }}
+          className="font-display text-3xl md:text-4xl text-foreground mb-2"
+        >
+          Compose Your <span className="italic text-primary">Music</span>
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="text-muted-foreground"
+        >
+          Generate and refine your composition plan
+        </motion.p>
       </div>
 
       {/* Main content */}
@@ -222,10 +210,8 @@ export function Step2Editors() {
 
             <CardHeader className="pb-3">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-md">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
+                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <CardTitle className="text-xl font-display">AI Prompt</CardTitle>
@@ -261,16 +247,12 @@ export function Step2Editors() {
                     </>
                   ) : compositionPlanText.trim() ? (
                     <>
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                      </svg>
+                      <RefreshCw className="h-5 w-5" />
                       Regenerate Plan
                     </>
                   ) : (
                     <>
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                      </svg>
+                      <Sparkles className="h-5 w-5" />
                       Generate Plan
                     </>
                   )}
@@ -295,12 +277,10 @@ export function Step2Editors() {
                 <div className="absolute -top-2 -right-2 w-4 h-4 border-r-2 border-t-2 border-accent/50 rounded-tr" />
 
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary/70 flex items-center justify-center text-secondary-foreground shadow-md">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-                        </svg>
+                      <div className="w-11 h-11 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                        <Music className="w-5 h-5 text-secondary" />
                       </div>
                       <div>
                         <CardTitle className="text-xl font-display">Composition Plan</CardTitle>
@@ -312,12 +292,14 @@ export function Step2Editors() {
                       </div>
                     </div>
 
-                    {/* Editor mode toggle */}
+                    {/* Editor mode toggle - below heading on mobile, inline on desktop */}
                     {canUseVisualEditor && (
-                      <EditorModeToggle
-                        mode={editorMode}
-                        onChange={setEditorMode}
-                      />
+                      <div className="ml-0 sm:ml-auto">
+                        <EditorModeToggle
+                          mode={editorMode}
+                          onChange={setEditorMode}
+                        />
+                      </div>
                     )}
                   </div>
                 </CardHeader>
@@ -345,7 +327,7 @@ export function Step2Editors() {
                             value={compositionPlanText}
                             onChange={(e) => handlePlanChange(e.target.value)}
                             placeholder="Your composition plan JSON..."
-                            className={`min-h-[320px] font-mono-code text-xs leading-relaxed rounded-xl border-border/60 bg-background/50 focus:bg-background transition-colors resize-none ${
+                            className={`min-h-[200px] sm:min-h-[320px] font-mono-code text-xs leading-relaxed rounded-xl border-border/60 bg-background/50 focus:bg-background transition-colors resize-none ${
                               displayError ? 'border-destructive/60 focus-visible:ring-destructive/50' : ''
                             }`}
                           />
@@ -369,9 +351,7 @@ export function Step2Editors() {
                             disabled={!compositionPlanText.trim()}
                             size="sm"
                           >
-                            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
-                            </svg>
+                            <Code2 className="mr-2 h-4 w-4" />
                             Format JSON
                           </Button>
                         </div>
@@ -398,7 +378,7 @@ export function Step2Editors() {
                 onClick={handleCreateMusic}
                 disabled={isCreatingMusic}
                 size="xl"
-                className="min-w-[280px] gap-3 glow-warm"
+                className="w-full sm:w-auto sm:min-w-[280px] gap-3 glow-warm"
               >
                 {isCreatingMusic ? (
                   <>
@@ -407,9 +387,7 @@ export function Step2Editors() {
                   </>
                 ) : (
                   <>
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
-                    </svg>
+                    <Music className="h-5 w-5" />
                     Render Music
                   </>
                 )}
@@ -429,16 +407,12 @@ export function Step2Editors() {
             <div className={`w-2 h-2 rounded-full ${promptText.trim() ? 'bg-primary' : 'bg-border'}`} />
             <span>Prompt</span>
           </div>
-          <svg className="w-4 h-4 text-border" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
+          <ChevronRight className="w-4 h-4 text-border" />
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${isPlanValid ? 'bg-secondary' : 'bg-border'}`} />
             <span>Plan</span>
           </div>
-          <svg className="w-4 h-4 text-border" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
+          <ChevronRight className="w-4 h-4 text-border" />
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${isCreatingMusic ? 'bg-accent animate-pulse' : 'bg-border'}`} />
             <span>Render</span>

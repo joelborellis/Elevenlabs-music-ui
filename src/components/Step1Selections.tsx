@@ -1,5 +1,6 @@
-import { motion } from 'motion/react';
-import { ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowRight, ChevronDown, Sparkles, Info, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,9 +11,12 @@ import {
   PROJECT_BLUEPRINT_OPTIONS,
   SOUND_PROFILE_OPTIONS,
   DELIVERY_AND_CONTROL_OPTIONS,
+  RECOMMENDED_COMBINATIONS,
   type ProjectBlueprint,
   type SoundProfile,
   type DeliveryAndControl,
+  type ExtendedSelectionOption,
+  type RecommendedCombo,
 } from '@/types';
 
 // Category icons
@@ -34,6 +38,221 @@ const CategoryIcons = {
   ),
 };
 
+// Category help text
+const CATEGORY_HELP = {
+  blueprint: {
+    question: 'What are you creating?',
+    hint: 'This determines the length, structure, and purpose of your music.',
+  },
+  sound: {
+    question: 'What genre and mood?',
+    hint: 'This sets the overall vibe, instruments, and tempo.',
+  },
+  delivery: {
+    question: 'How creative vs. controlled?',
+    hint: 'This controls how much freedom the AI has in creating your music.',
+  },
+};
+
+// Option card with expandable details
+interface OptionCardProps<T extends string> {
+  option: ExtendedSelectionOption<T>;
+  isSelected: boolean;
+  onSelect: () => void;
+  colorClass: string;
+  delay: number;
+}
+
+function OptionCard<T extends string>({
+  option,
+  isSelected,
+  onSelect,
+  colorClass,
+  delay,
+}: OptionCardProps<T>) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.3 }}
+    >
+      <div
+        onClick={onSelect}
+        className={`relative rounded-xl border cursor-pointer transition-all duration-200 ${
+          isSelected
+            ? `border-${colorClass} bg-${colorClass}/5 shadow-sm`
+            : 'border-border/40 hover:border-border hover:bg-muted/30'
+        }`}
+      >
+        {/* Main option row */}
+        <label className="flex items-start gap-3 p-3 cursor-pointer">
+          <RadioGroupItem value={option.value} id={option.value} className="mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="block font-medium text-sm text-foreground">{option.label}</span>
+              {option.recommended && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Recommended
+                </span>
+              )}
+            </div>
+            <span className="block text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              {option.description}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDetails(!showDetails);
+            }}
+            className="p-2 sm:p-1 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-md hover:bg-muted/50 transition-colors flex items-center justify-center"
+            title="Show details"
+          >
+            <ChevronDown
+              className={`w-4 h-4 text-muted-foreground transition-transform ${
+                showDetails ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+        </label>
+
+        {/* Expandable details */}
+        <AnimatePresence>
+          {showDetails && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3 pt-0 border-t border-border/30 mt-1">
+                <div className="pt-3 space-y-3">
+                  {/* What it does */}
+                  <div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {option.details}
+                    </p>
+                  </div>
+
+                  {/* Specs */}
+                  {option.specs && (
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(option.specs).map(([key, value]) => (
+                        <span
+                          key={key}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 text-[10px]"
+                        >
+                          <span className="text-muted-foreground">{key}:</span>
+                          <span className="font-medium text-foreground">{value}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* When to choose */}
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1">
+                      <Lightbulb className="w-3 h-3" />
+                      When to choose this
+                    </p>
+                    <ul className="space-y-1">
+                      {option.whenToChoose.map((reason, i) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary/60 mt-1">•</span>
+                          <span>{reason}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+// Quick start combo card
+interface QuickStartCardProps {
+  combo: RecommendedCombo;
+  onApply: () => void;
+  isActive: boolean;
+}
+
+function QuickStartCard({ combo, onApply, isActive }: QuickStartCardProps) {
+  return (
+    <button
+      onClick={onApply}
+      className={`flex-shrink-0 w-28 sm:w-36 p-2.5 sm:p-3 rounded-xl border text-left transition-all ${
+        isActive
+          ? 'border-primary bg-primary/5 shadow-sm'
+          : 'border-border/40 hover:border-border hover:bg-muted/30'
+      }`}
+    >
+      <h4 className="font-medium text-sm text-foreground truncate">{combo.useCase}</h4>
+      <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{combo.description}</p>
+    </button>
+  );
+}
+
+// Expandable category hint component
+interface CategoryHintProps {
+  hint: string;
+  colorClass: 'primary' | 'secondary' | 'accent';
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+function CategoryHint({ hint, colorClass, isExpanded, onToggle }: CategoryHintProps) {
+  const bgClass = colorClass === 'primary' ? 'bg-primary/5 border-primary/10'
+    : colorClass === 'secondary' ? 'bg-secondary/5 border-secondary/10'
+    : 'bg-accent/5 border-accent/10';
+
+  const textClass = colorClass === 'primary' ? 'text-primary'
+    : colorClass === 'secondary' ? 'text-secondary'
+    : 'text-accent';
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`w-full flex items-center justify-between gap-2 p-2 rounded-lg border transition-colors ${bgClass} hover:opacity-80`}
+      >
+        <div className="flex items-center gap-2">
+          <Info className={`w-3.5 h-3.5 ${textClass} flex-shrink-0`} />
+          <span className="text-[11px] text-muted-foreground font-medium">What does this control?</span>
+        </div>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+        />
+      </button>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <p className={`text-[11px] text-muted-foreground leading-relaxed pt-2 px-2`}>
+              {hint}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function Step1Selections() {
   const {
     selections,
@@ -46,10 +265,32 @@ export function Step1Selections() {
 
   const canProceed = useSelectionsComplete();
 
+  // State for expanded category hints
+  const [expandedHints, setExpandedHints] = useState<Record<string, boolean>>({
+    blueprint: false,
+    sound: false,
+    delivery: false,
+  });
+
+  const toggleHint = (category: string) => {
+    setExpandedHints(prev => ({ ...prev, [category]: !prev[category] }));
+  };
+
   const handleContinue = () => {
     if (!canProceed) return;
     nextStep();
   };
+
+  const applyCombo = (combo: RecommendedCombo) => {
+    setProjectBlueprint(combo.blueprint);
+    setSoundProfile(combo.sound);
+    setDeliveryAndControl(combo.delivery);
+  };
+
+  const isComboActive = (combo: RecommendedCombo) =>
+    selections.project_blueprint === combo.blueprint &&
+    selections.sound_profile === combo.sound &&
+    selections.delivery_and_control === combo.delivery;
 
   return (
     <motion.div
@@ -57,7 +298,7 @@ export function Step1Selections() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="space-y-10"
+      className="space-y-8"
     >
       {/* Header section */}
       <div className="max-w-4xl mx-auto text-center">
@@ -83,12 +324,39 @@ export function Step1Selections() {
           transition={{ delay: 0.2, duration: 0.4 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Select your project type, sound profile, and workflow preferences
+          Select your project type, sound profile, and workflow preferences. Click the{' '}
+          <ChevronDown className="inline w-4 h-4" /> icon on any option for more details.
         </motion.p>
       </div>
 
+      {/* Quick Start Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.22, duration: 0.4 }}
+        className="max-w-6xl mx-auto"
+      >
+        <div className="relative bg-muted/30 rounded-2xl p-4 border border-border/40">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Quick Start</span>
+            <span className="text-xs text-muted-foreground">— click to apply a recommended combination</span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+            {RECOMMENDED_COMBINATIONS.map((combo) => (
+              <QuickStartCard
+                key={combo.useCase}
+                combo={combo}
+                onApply={() => applyCombo(combo)}
+                isActive={isComboActive(combo)}
+              />
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
       {/* Selection cards grid */}
-      <div className="grid gap-6 lg:grid-cols-3 max-w-6xl mx-auto">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
         {/* Project Blueprint */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -108,9 +376,18 @@ export function Step1Selections() {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-display text-foreground">Project Blueprint</CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground mt-0.5">What are you creating?</CardDescription>
+                  <CardDescription className="text-sm text-muted-foreground mt-0.5">
+                    {CATEGORY_HELP.blueprint.question}
+                  </CardDescription>
                 </div>
               </div>
+              {/* Expandable help hint */}
+              <CategoryHint
+                hint={CATEGORY_HELP.blueprint.hint}
+                colorClass="primary"
+                isExpanded={expandedHints.blueprint}
+                onToggle={() => toggleHint('blueprint')}
+              />
               {/* Separator */}
               <div className="mt-4 h-px bg-gradient-to-r from-primary/40 via-border/60 to-transparent" />
             </CardHeader>
@@ -122,29 +399,14 @@ export function Step1Selections() {
                 className="space-y-2"
               >
                 {PROJECT_BLUEPRINT_OPTIONS.map((option, index) => (
-                  <motion.div
+                  <OptionCard
                     key={option.value}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}
-                  >
-                    <label
-                      htmlFor={option.value}
-                      className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
-                        selections.project_blueprint === option.value
-                          ? 'border-primary bg-primary/5 shadow-sm'
-                          : 'border-border/40 hover:border-border hover:bg-muted/30'
-                      }`}
-                    >
-                      <RadioGroupItem value={option.value} id={option.value} className="mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <span className="block font-medium text-sm text-foreground">{option.label}</span>
-                        <span className="block text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                          {option.description}
-                        </span>
-                      </div>
-                    </label>
-                  </motion.div>
+                    option={option}
+                    isSelected={selections.project_blueprint === option.value}
+                    onSelect={() => setProjectBlueprint(option.value)}
+                    colorClass="primary"
+                    delay={0.3 + index * 0.05}
+                  />
                 ))}
               </RadioGroup>
             </CardContent>
@@ -170,9 +432,18 @@ export function Step1Selections() {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-display text-foreground">Sound Profile</CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground mt-0.5">Genre & sonic character</CardDescription>
+                  <CardDescription className="text-sm text-muted-foreground mt-0.5">
+                    {CATEGORY_HELP.sound.question}
+                  </CardDescription>
                 </div>
               </div>
+              {/* Expandable help hint */}
+              <CategoryHint
+                hint={CATEGORY_HELP.sound.hint}
+                colorClass="secondary"
+                isExpanded={expandedHints.sound}
+                onToggle={() => toggleHint('sound')}
+              />
               {/* Separator */}
               <div className="mt-4 h-px bg-gradient-to-r from-secondary/40 via-border/60 to-transparent" />
             </CardHeader>
@@ -184,29 +455,14 @@ export function Step1Selections() {
                 className="space-y-2"
               >
                 {SOUND_PROFILE_OPTIONS.map((option, index) => (
-                  <motion.div
+                  <OptionCard
                     key={option.value}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.35 + index * 0.05, duration: 0.3 }}
-                  >
-                    <label
-                      htmlFor={option.value}
-                      className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
-                        selections.sound_profile === option.value
-                          ? 'border-secondary bg-secondary/5 shadow-sm'
-                          : 'border-border/40 hover:border-border hover:bg-muted/30'
-                      }`}
-                    >
-                      <RadioGroupItem value={option.value} id={option.value} className="mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <span className="block font-medium text-sm text-foreground">{option.label}</span>
-                        <span className="block text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                          {option.description}
-                        </span>
-                      </div>
-                    </label>
-                  </motion.div>
+                    option={option}
+                    isSelected={selections.sound_profile === option.value}
+                    onSelect={() => setSoundProfile(option.value)}
+                    colorClass="secondary"
+                    delay={0.35 + index * 0.05}
+                  />
                 ))}
               </RadioGroup>
             </CardContent>
@@ -232,9 +488,18 @@ export function Step1Selections() {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-display text-foreground">Delivery & Control</CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground mt-0.5">Workflow preferences</CardDescription>
+                  <CardDescription className="text-sm text-muted-foreground mt-0.5">
+                    {CATEGORY_HELP.delivery.question}
+                  </CardDescription>
                 </div>
               </div>
+              {/* Expandable help hint */}
+              <CategoryHint
+                hint={CATEGORY_HELP.delivery.hint}
+                colorClass="accent"
+                isExpanded={expandedHints.delivery}
+                onToggle={() => toggleHint('delivery')}
+              />
               {/* Separator */}
               <div className="mt-4 h-px bg-gradient-to-r from-accent/40 via-border/60 to-transparent" />
             </CardHeader>
@@ -246,29 +511,14 @@ export function Step1Selections() {
                 className="space-y-2"
               >
                 {DELIVERY_AND_CONTROL_OPTIONS.map((option, index) => (
-                  <motion.div
+                  <OptionCard
                     key={option.value}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + index * 0.05, duration: 0.3 }}
-                  >
-                    <label
-                      htmlFor={option.value}
-                      className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
-                        selections.delivery_and_control === option.value
-                          ? 'border-accent bg-accent/5 shadow-sm'
-                          : 'border-border/40 hover:border-border hover:bg-muted/30'
-                      }`}
-                    >
-                      <RadioGroupItem value={option.value} id={option.value} className="mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <span className="block font-medium text-sm text-foreground">{option.label}</span>
-                        <span className="block text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                          {option.description}
-                        </span>
-                      </div>
-                    </label>
-                  </motion.div>
+                    option={option}
+                    isSelected={selections.delivery_and_control === option.value}
+                    onSelect={() => setDeliveryAndControl(option.value)}
+                    colorClass="accent"
+                    delay={0.4 + index * 0.05}
+                  />
                 ))}
               </RadioGroup>
             </CardContent>
@@ -297,7 +547,7 @@ export function Step1Selections() {
                     Instrumental Only
                   </Label>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Generate music without vocals
+                    Generate music without vocals (overrides blueprint setting)
                   </p>
                 </div>
               </div>
@@ -322,7 +572,7 @@ export function Step1Selections() {
           size="xl"
           onClick={handleContinue}
           disabled={!canProceed}
-          className="min-w-[280px] group gap-3"
+          className="w-full sm:w-auto sm:min-w-[280px] group gap-3"
         >
           Continue to Your Story
           <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />

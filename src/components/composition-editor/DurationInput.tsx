@@ -70,13 +70,15 @@ export function DurationInput({ value, onChange, className }: DurationInputProps
       type="button"
       onClick={() => setIsEditing(true)}
       className={cn(
-        'group inline-flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/50 transition-colors',
+        'group inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:py-1 min-h-[44px] sm:min-h-0 rounded-md hover:bg-muted/50 transition-colors',
         className
       )}
     >
       <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-      <span className="text-sm font-mono">{value}ms</span>
-      <span className="text-xs text-muted-foreground">({seconds}s)</span>
+      {/* Mobile: compact display / Desktop: full display */}
+      <span className="text-sm font-mono sm:hidden">{seconds}s</span>
+      <span className="text-sm font-mono hidden sm:inline">{value}ms</span>
+      <span className="text-xs text-muted-foreground hidden sm:inline">({seconds}s)</span>
     </button>
   );
 }

@@ -179,12 +179,12 @@ export function Step3Player() {
       className="space-y-10"
     >
       {/* Success header */}
-      <div className="text-center max-w-2xl mx-auto">
+      <div className="flex flex-col items-center max-w-2xl mx-auto">
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ delay: 0.2, type: 'spring', stiffness: 150, damping: 15 }}
-          className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 mb-6 relative"
+          className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 mb-6 relative"
         >
           {/* Vinyl record design */}
           <div
@@ -204,7 +204,7 @@ export function Step3Player() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.4 }}
-          className="inline-block text-xs uppercase tracking-[0.3em] text-primary font-medium mb-3"
+          className="block text-xs uppercase tracking-[0.3em] text-primary font-medium mb-3 mr-[0.3em]"
         >
           Complete
         </motion.span>
@@ -213,7 +213,7 @@ export function Step3Player() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.4 }}
-          className="font-display text-4xl md:text-5xl text-foreground mb-4"
+          className="font-display text-3xl sm:text-4xl md:text-5xl text-foreground mb-4 text-center"
         >
           Your Music is <span className="italic text-primary">Ready</span>
         </motion.h2>
@@ -222,7 +222,7 @@ export function Step3Player() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.4 }}
-          className="text-lg text-muted-foreground"
+          className="text-lg text-muted-foreground text-center"
         >
           Listen to your composition and download when ready
         </motion.p>
@@ -265,7 +265,7 @@ export function Step3Player() {
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 pointer-events-none" />
 
               {/* Waveform bars */}
-              <div className="flex items-end justify-center gap-[3px] h-28 relative z-10">
+              <div className="flex items-end justify-center gap-[2px] sm:gap-[3px] h-20 sm:h-28 relative z-10">
                 {Array.from({ length: 48 }).map((_, i) => {
                   const heightVariation = Math.sin(i * 0.3) * 30 + Math.cos(i * 0.5) * 20;
                   const baseHeight = 30 + heightVariation + Math.random() * 20;
@@ -371,7 +371,7 @@ export function Step3Player() {
                     step="0.01"
                     value={isMuted ? 0 : volume}
                     onChange={handleVolumeChange}
-                    className="w-16 h-1 bg-background/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
+                    className="hidden sm:block w-16 h-1 bg-background/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
                     aria-label="Volume"
                   />
                 </div>
@@ -379,7 +379,7 @@ export function Step3Player() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex gap-3">
               <Button asChild className="flex-1" size="lg">
                 <a
                   href={audioResult.downloadUrl || audioResult.audioUrl}
@@ -387,13 +387,13 @@ export function Step3Player() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Download className="mr-2 h-5 w-5" />
-                  Download Track
+                  <Download className="h-5 w-5 sm:mr-2" />
+                  <span className="hidden sm:inline">Download Track</span>
                 </a>
               </Button>
               <Button variant="outline" onClick={reset} className="flex-1" size="lg">
-                <RotateCcw className="mr-2 h-5 w-5" />
-                Start New Composition
+                <RotateCcw className="h-5 w-5 sm:mr-2" />
+                <span className="hidden sm:inline">Start New Composition</span>
               </Button>
             </div>
           </CardContent>

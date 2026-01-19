@@ -35,28 +35,287 @@ export interface SelectionOption<T extends string> {
   description: string;
 }
 
-export const PROJECT_BLUEPRINT_OPTIONS: SelectionOption<ProjectBlueprint>[] = [
-  { value: 'ad_brand_fast_hook', label: 'Ad/Brand Spot', description: '30s ad/brand spot with fast hook' },
-  { value: 'podcast_voiceover_loop', label: 'Podcast Bed', description: '60s loopable podcast bed' },
-  { value: 'video_game_action_loop', label: 'Game Music', description: '90s loopable game music' },
-  { value: 'meditation_sleep', label: 'Meditation', description: 'Ambient meditation/sleep music' },
-  { value: 'standalone_song_mini', label: 'Mini Song', description: '90s mini-song with structure' },
+// Extended option metadata with hints from the guide
+export interface ExtendedSelectionOption<T extends string> extends SelectionOption<T> {
+  shortDescription: string;  // Brief (for compact view)
+  details: string;           // What it does to your music
+  whenToChoose: string[];    // Use cases
+  specs?: Record<string, string>; // Technical specs like length, BPM
+  recommended?: boolean;     // Whether this is a recommended default
+}
+
+export const PROJECT_BLUEPRINT_OPTIONS: ExtendedSelectionOption<ProjectBlueprint>[] = [
+  {
+    value: 'ad_brand_fast_hook',
+    label: 'Ad/Brand Spot',
+    description: '30 seconds, no vocals, punchy ending',
+    shortDescription: '30s ad with fast hook',
+    details: 'Creates attention-grabbing music that hooks listeners immediately, builds quickly, and ends with a memorable punch. Leaves space for voiceovers.',
+    whenToChoose: [
+      'Making short advertisements or promotional videos',
+      'Need background music that won\'t compete with voiceover',
+      'Creating content for social media platforms',
+    ],
+    specs: { 'Length': '30 seconds', 'Vocals': 'None (voiceover-friendly)', 'Ending': 'Punchy button' },
+  },
+  {
+    value: 'podcast_voiceover_loop',
+    label: 'Podcast Bed',
+    description: '60 seconds, seamless loop, instrumental',
+    shortDescription: '60s loopable bed',
+    details: 'Creates gentle, unobtrusive background music that evolves subtly without jarring transitions. Perfect for looping endlessly while you talk over it.',
+    whenToChoose: [
+      'Need music to play behind spoken content',
+      'Want something that can repeat without being annoying',
+      'Need a calming backdrop that doesn\'t distract',
+    ],
+    specs: { 'Length': '60 seconds', 'Vocals': 'None', 'Ending': 'Seamless loop' },
+  },
+  {
+    value: 'video_game_action_loop',
+    label: 'Game Music',
+    description: '90 seconds with intro, loop, and exit',
+    shortDescription: '90s action loop',
+    details: 'Creates dynamic, high-energy music with exciting build-ups and powerful drops. Structure: Build-up, Drop, Breakdown, Final climax.',
+    whenToChoose: [
+      'Creating gaming videos or action sequences',
+      'Need energetic, driving music with tension and release',
+      'Want clear rising and falling intensity',
+    ],
+    specs: { 'Length': '90 seconds', 'Vocals': 'None', 'Structure': 'Intro + Loop + Exit' },
+  },
+  {
+    value: 'meditation_sleep',
+    label: 'Meditation',
+    description: 'Extended length, gentle fade, peaceful',
+    shortDescription: 'Ambient & sleep',
+    details: 'Creates soothing, atmospheric music that evolves very slowly and peacefully. No abrupt changes or energetic moments—pure tranquility.',
+    whenToChoose: [
+      'Want calming, peaceful music',
+      'Need ambient soundscapes without sudden moments',
+      'Creating content for relaxation or sleep',
+    ],
+    specs: { 'Length': 'Auto (usually longer)', 'Vocals': 'None', 'Ending': 'Gentle fade' },
+  },
+  {
+    value: 'standalone_song_mini',
+    label: 'Mini Song',
+    description: '90 seconds with vocals, lyrics, full structure',
+    shortDescription: '90s complete song',
+    details: 'Creates a mini pop song with proper structure: Intro, Verse, Chorus, Verse, Chorus, Outro. Includes AI-generated original lyrics and vocals.',
+    whenToChoose: [
+      'Want an actual song with singing',
+      'Creating something personal to share',
+      'Want a complete musical piece with a story',
+    ],
+    specs: { 'Length': '90 seconds', 'Vocals': 'Yes (with lyrics)', 'Structure': 'Full song' },
+  },
 ];
 
-export const SOUND_PROFILE_OPTIONS: SelectionOption<SoundProfile>[] = [
-  { value: 'bright_pop_electro', label: 'Pop/Electro', description: 'Uplifting electronic/EDM' },
-  { value: 'dark_trap_night', label: 'Dark Trap', description: 'Dark trap/hip-hop' },
-  { value: 'lofi_cozy', label: 'Lo-Fi', description: 'Cozy lo-fi beats' },
-  { value: 'epic_cinematic', label: 'Cinematic', description: 'Epic cinematic orchestral' },
-  { value: 'indie_live_band', label: 'Indie Band', description: 'Indie live band sound' },
+export const SOUND_PROFILE_OPTIONS: ExtendedSelectionOption<SoundProfile>[] = [
+  {
+    value: 'bright_pop_electro',
+    label: 'Pop/Electro',
+    description: 'Happy, energetic, 110-125 BPM',
+    shortDescription: 'Uplifting electronic',
+    details: 'Creates bright, shimmering electronic music with exciting drops and catchy melodies. Think: uplifting commercials or happy social media videos.',
+    whenToChoose: [
+      'Want something that makes people feel happy',
+      'Need energetic, danceable music',
+      'Creating celebratory or positive content',
+    ],
+    specs: { 'Genre': 'Electronic Pop / EDM', 'Tempo': '110-125 BPM', 'Mood': 'Euphoric, celebratory' },
+  },
+  {
+    value: 'dark_trap_night',
+    label: 'Dark Trap',
+    description: 'Intense, moody, 145-170 BPM',
+    shortDescription: 'Dark hip-hop/trap',
+    details: 'Creates heavy, bass-driven music with a menacing atmosphere. Deep 808 bass, crisp hi-hats, and dark textures. Hits hard with laid-back swagger.',
+    whenToChoose: [
+      'Want something with attitude and edge',
+      'Creating content with a darker, moodier vibe',
+      'Need music that feels urban and contemporary',
+    ],
+    specs: { 'Genre': 'Hip-Hop / Trap', 'Tempo': '145-170 BPM (half-time feel)', 'Mood': 'Dark, tense, edgy' },
+  },
+  {
+    value: 'lofi_cozy',
+    label: 'Lo-Fi',
+    description: 'Relaxed, cozy, 85-105 BPM',
+    shortDescription: 'Chill lo-fi beats',
+    details: 'Creates warm, slightly imperfect-sounding music with a gentle swing. The lo-fi quality adds character and nostalgia—like an old record.',
+    whenToChoose: [
+      'Want background music for studying or working',
+      'Need something cozy and unobtrusive',
+      'Creating content with a nostalgic feel',
+    ],
+    specs: { 'Genre': 'Lo-fi / Chillhop', 'Tempo': '85-105 BPM', 'Mood': 'Warm, intimate, nostalgic' },
+    recommended: true,
+  },
+  {
+    value: 'epic_cinematic',
+    label: 'Cinematic',
+    description: 'Grand, heroic, 110-125 BPM',
+    shortDescription: 'Epic orchestral',
+    details: 'Creates sweeping, cinematic music building from subtle beginnings to powerful crescendos. Combines orchestral instruments with modern electronic elements.',
+    whenToChoose: [
+      'Want music that feels like a movie soundtrack',
+      'Need something grand and inspiring',
+      'Creating content with dramatic moments',
+    ],
+    specs: { 'Genre': 'Cinematic / Orchestral + Electronic', 'Tempo': '110-125 BPM', 'Mood': 'Epic, powerful, inspiring' },
+  },
+  {
+    value: 'indie_live_band',
+    label: 'Indie Band',
+    description: 'Authentic, warm, 85-105 BPM',
+    shortDescription: 'Live band feel',
+    details: 'Creates music that sounds like actual musicians playing together. Starts intimate, builds to an emotionally satisfying finish with human feel.',
+    whenToChoose: [
+      'Want music that sounds like a real band',
+      'Prefer organic, human-sounding music',
+      'Creating content with an authentic vibe',
+    ],
+    specs: { 'Genre': 'Indie / Rock', 'Tempo': '85-105 BPM', 'Instruments': 'Drums, bass, guitars, keys' },
+  },
 ];
 
-export const DELIVERY_AND_CONTROL_OPTIONS: SelectionOption<DeliveryAndControl>[] = [
-  { value: 'exploratory_iterate', label: 'Exploratory', description: 'Exploratory with iteration' },
-  { value: 'balanced_studio', label: 'Balanced', description: 'Balanced studio approach' },
-  { value: 'blueprint_plan_first', label: 'Blueprint', description: 'Blueprint planning first' },
-  { value: 'live_one_take', label: 'Live Take', description: 'Live one-take recording' },
-  { value: 'isolation_stems', label: 'Stems', description: 'Isolated stem outputs' },
+export const DELIVERY_AND_CONTROL_OPTIONS: ExtendedSelectionOption<DeliveryAndControl>[] = [
+  {
+    value: 'exploratory_iterate',
+    label: 'Exploratory',
+    description: 'Maximum creativity, unique results',
+    shortDescription: 'Max AI creativity',
+    details: 'Gives the AI permission to take creative liberties. You might get unexpected but delightful results. Transitions flow naturally with a warm, atmospheric feel.',
+    whenToChoose: [
+      'Want to be surprised by what the AI creates',
+      'Exploring without a specific vision',
+      'Value creativity over predictability',
+    ],
+    specs: { 'AI Freedom': 'Very High', 'Sound': 'Warm, organic' },
+  },
+  {
+    value: 'balanced_studio',
+    label: 'Balanced',
+    description: 'Recommended: professional, polished',
+    shortDescription: 'Balanced studio',
+    details: 'Creates professionally polished music with clear structure and smooth transitions. This is the "just make it sound good" option—reliable, clean, and balanced.',
+    whenToChoose: [
+      'Not sure which option to pick',
+      'Want professional-sounding results',
+      'Need music that sounds "radio-ready"',
+    ],
+    specs: { 'AI Freedom': 'Moderate', 'Sound': 'Modern, polished' },
+    recommended: true,
+  },
+  {
+    value: 'blueprint_plan_first',
+    label: 'Blueprint',
+    description: 'Maximum structure, precise timing',
+    shortDescription: 'Max structure',
+    details: 'Creates highly structured music with deliberate timing and dramatic transitions. Clear risers and impacts. Great for syncing music to specific visuals.',
+    whenToChoose: [
+      'Need precise control over structure',
+      'Creating content where timing matters',
+      'Syncing music to specific visuals',
+    ],
+    specs: { 'AI Freedom': 'Low', 'Sound': 'Cinematic, dramatic' },
+  },
+  {
+    value: 'live_one_take',
+    label: 'Live Take',
+    description: 'Live performance feel, human touch',
+    shortDescription: 'Live recording',
+    details: 'Creates music that sounds like it was recorded live in one take. Natural variations, room acoustics, and imperfections that make music feel alive.',
+    whenToChoose: [
+      'Want music that feels "real" and human',
+      'Prefer imperfections over sterile perfection',
+      'Love the sound of live recordings',
+    ],
+    specs: { 'AI Freedom': 'Medium', 'Sound': 'Natural, breathing' },
+  },
+  {
+    value: 'isolation_stems',
+    label: 'Stems',
+    description: 'Clean separation, edit-friendly',
+    shortDescription: 'Separated tracks',
+    details: 'Each instrument is clearly separated with a dry, precise sound. Not as musical feeling, but perfect if you plan to edit or remix the audio later.',
+    whenToChoose: [
+      'Might want to edit or remix later',
+      'Need very clean, separated sounds',
+      'Experienced with audio editing',
+    ],
+    specs: { 'AI Freedom': 'Very Low', 'Sound': 'Dry, precise' },
+  },
+];
+
+// Recommended preset combinations by use case
+export interface RecommendedCombo {
+  useCase: string;
+  description: string;
+  blueprint: ProjectBlueprint;
+  sound: SoundProfile;
+  delivery: DeliveryAndControl;
+}
+
+export const RECOMMENDED_COMBINATIONS: RecommendedCombo[] = [
+  {
+    useCase: 'Social Media Ad',
+    description: 'Catchy, energetic music for ads and promotional content',
+    blueprint: 'ad_brand_fast_hook',
+    sound: 'bright_pop_electro',
+    delivery: 'balanced_studio',
+  },
+  {
+    useCase: 'Podcast Background',
+    description: 'Chill, unobtrusive background music for spoken content',
+    blueprint: 'podcast_voiceover_loop',
+    sound: 'lofi_cozy',
+    delivery: 'exploratory_iterate',
+  },
+  {
+    useCase: 'Gaming Video',
+    description: 'High-energy music for action and gaming content',
+    blueprint: 'video_game_action_loop',
+    sound: 'dark_trap_night',
+    delivery: 'blueprint_plan_first',
+  },
+  {
+    useCase: 'Meditation Track',
+    description: 'Peaceful ambient music for relaxation and sleep',
+    blueprint: 'meditation_sleep',
+    sound: 'lofi_cozy',
+    delivery: 'exploratory_iterate',
+  },
+  {
+    useCase: 'Personal Song',
+    description: 'A complete song with vocals for someone special',
+    blueprint: 'standalone_song_mini',
+    sound: 'indie_live_band',
+    delivery: 'balanced_studio',
+  },
+  {
+    useCase: 'Epic Trailer',
+    description: 'Cinematic music for dramatic content and trailers',
+    blueprint: 'video_game_action_loop',
+    sound: 'epic_cinematic',
+    delivery: 'blueprint_plan_first',
+  },
+  {
+    useCase: 'Study Music',
+    description: 'Relaxing background music for focus and studying',
+    blueprint: 'podcast_voiceover_loop',
+    sound: 'lofi_cozy',
+    delivery: 'exploratory_iterate',
+  },
+  {
+    useCase: 'Birthday Song',
+    description: 'Upbeat celebratory song with personalized lyrics',
+    blueprint: 'standalone_song_mini',
+    sound: 'bright_pop_electro',
+    delivery: 'balanced_studio',
+  },
 ];
 
 /**

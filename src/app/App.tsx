@@ -23,7 +23,7 @@ export function App() {
           {/* Decorative top accent line */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-secondary opacity-80" />
 
-          <div className="container mx-auto px-6 py-5">
+          <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
             <div className="flex items-end justify-between">
               {/* Logo and branding - editorial asymmetry */}
               <div className="relative">
@@ -65,12 +65,12 @@ export function App() {
         </header>
 
         {/* Stepper - with generous spacing */}
-        <div className="container mx-auto px-6 pt-10 pb-6">
+        <div className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-4 sm:pb-6">
           <Stepper className="mb-8" />
         </div>
 
         {/* Step Content - with left offset for editorial feel */}
-        <main className="container mx-auto px-6 pb-20">
+        <main className="container mx-auto px-4 sm:px-6 pb-12 sm:pb-20">
           <AnimatePresence mode="wait">
             {currentStep === 0 && <Step1Selections key="step0" />}
             {currentStep === 1 && <Step0UserNarrative key="step1" />}
@@ -84,7 +84,7 @@ export function App() {
           {/* Decorative bottom accent */}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
-          <div className="container mx-auto px-6">
+          <div className="container mx-auto px-4 sm:px-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-sm text-muted-foreground font-display italic">
                 Crafting soundscapes with intention

@@ -51,7 +51,7 @@ export function TagInput({
   return (
     <div
       className={cn(
-        'flex flex-wrap gap-1.5 p-2 min-h-[42px] rounded-lg border border-border/60 bg-background/50 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all cursor-text',
+        'flex flex-wrap gap-1.5 p-2 min-h-[44px] sm:min-h-[42px] rounded-lg border border-border/60 bg-background/50 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all cursor-text',
         className
       )}
       onClick={() => inputRef.current?.focus()}
@@ -72,7 +72,7 @@ export function TagInput({
               removeTag(tag);
             }}
             className={cn(
-              'rounded-sm p-0.5 -mr-0.5 transition-colors',
+              'rounded-sm p-1 sm:p-0.5 -mr-0.5 transition-colors',
               removeButtonColors
             )}
           >

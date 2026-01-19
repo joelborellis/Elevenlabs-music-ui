@@ -21,8 +21,8 @@ export function SectionList({
 }: SectionListProps) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wide">
           Sections ({sections.length})
         </h3>
         <Button
@@ -30,10 +30,11 @@ export function SectionList({
           variant="outline"
           size="sm"
           onClick={onAddSection}
-          className="gap-1.5"
+          className="gap-1.5 text-xs sm:text-sm"
         >
           <Plus className="h-4 w-4" />
-          Add Section
+          <span className="hidden sm:inline">Add Section</span>
+          <span className="sm:hidden">Add</span>
         </Button>
       </div>
 

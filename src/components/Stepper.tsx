@@ -1,7 +1,8 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { cn } from '@/lib/utils';
 import { useWizardStore } from '@/state/wizardStore';
+import type { WizardStep } from '@/types';
 
 interface StepperProps {
   className?: string;
@@ -16,8 +17,16 @@ const steps = [
 
 export function Stepper({ className }: StepperProps) {
   const currentStep = useWizardStore((state) => state.currentStep);
+  const setStep = useWizardStore((state) => state.setStep);
   const progressRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleStepClick = useCallback((stepNumber: number) => {
+    // Only allow navigating to completed steps (steps before current)
+    if (stepNumber < currentStep) {
+      setStep(stepNumber as WizardStep);
+    }
+  }, [currentStep, setStep]);
 
   // GSAP animation for progress bar
   useEffect(() => {
@@ -103,14 +112,17 @@ export function Stepper({ className }: StepperProps) {
                 className="step-item flex flex-col items-center gap-3 relative z-10"
               >
                 {/* Step indicator - analog dial inspired */}
-                <div
+                <button
+                  type="button"
+                  onClick={() => handleStepClick(step.number)}
+                  disabled={!isCompleted}
                   className={cn(
                     'step-indicator relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300',
                     isActive
                       ? 'bg-gradient-to-br from-primary to-accent glow-warm'
                       : isCompleted
-                      ? 'bg-secondary'
-                      : 'bg-card border-2 border-border'
+                      ? 'bg-secondary cursor-pointer hover:scale-105 hover:ring-2 hover:ring-secondary/50 hover:ring-offset-2 hover:ring-offset-background'
+                      : 'bg-card border-2 border-border cursor-default'
                   )}
                 >
                   {/* Inner ring - vintage dial look */}
@@ -158,7 +170,7 @@ export function Stepper({ className }: StepperProps) {
                       </svg>
                     </div>
                   )}
-                </div>
+                </button>
 
                 {/* Step label */}
                 <div className="text-center">
