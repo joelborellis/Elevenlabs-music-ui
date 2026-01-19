@@ -60,7 +60,7 @@ export function SectionList({
         >
           {sections.map((section, index) => (
             <Reorder.Item
-              key={`${section.name}-${index}`}
+              key={`${section.section_name}-${index}`}
               value={section}
               className="cursor-default"
             >

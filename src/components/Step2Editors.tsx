@@ -11,20 +11,54 @@ import { VisualPlanEditor, EditorModeToggle } from '@/components/composition-edi
 import type { CompositionPlan, CompositionPlanData } from '@/types';
 
 // Type guard to check if plan has required structure for visual editor
-function isValidPlanStructure(plan: CompositionPlan | null): plan is CompositionPlanData {
+// Handles both wrapped format {composition_plan: {...}} and direct format {sections: [...]}
+function isValidPlanStructure(plan: CompositionPlan | null): boolean {
   if (!plan) return false;
-  const p = plan as CompositionPlanData;
-  return (
-    typeof p.composition_plan === 'object' &&
-    p.composition_plan !== null &&
-    Array.isArray(p.composition_plan.sections)
-  );
+
+  // Check for wrapped format: {composition_plan: {sections: [...]}}
+  const wrapped = plan as CompositionPlanData;
+  if (wrapped.composition_plan && Array.isArray(wrapped.composition_plan.sections)) {
+    return true;
+  }
+
+  // Check for direct format: {sections: [...]}
+  const direct = plan as { sections?: unknown };
+  if (Array.isArray(direct.sections)) {
+    return true;
+  }
+
+  return false;
+}
+
+// Normalize plan to wrapped format for the visual editor
+function normalizePlan(plan: CompositionPlan): CompositionPlanData {
+  const wrapped = plan as CompositionPlanData;
+
+  // Already in wrapped format
+  if (wrapped.composition_plan && Array.isArray(wrapped.composition_plan.sections)) {
+    return wrapped;
+  }
+
+  // Direct format - wrap it
+  const direct = plan as unknown as CompositionPlanData['composition_plan'] & {
+    song_metadata?: CompositionPlanData['song_metadata'];
+  };
+
+  return {
+    composition_plan: {
+      positive_global_styles: direct.positive_global_styles,
+      negative_global_styles: direct.negative_global_styles,
+      sections: direct.sections,
+    },
+    song_metadata: direct.song_metadata,
+  };
 }
 
 export function Step2Editors() {
   const {
     promptText,
     setPromptText,
+    promptMetadata,
     compositionPlanText,
     compositionPlanObject,
     planJsonError,
@@ -48,7 +82,19 @@ export function Step2Editors() {
     setIsGeneratingPlan(true);
     try {
       const plan = await generateCompositionPlan(promptText);
-      const planText = JSON.stringify(plan, null, 2);
+      // Normalize the plan to wrapped format for consistent handling
+      const normalizedPlan = normalizePlan(plan);
+
+      // Merge prompt metadata (title/description) into song_metadata
+      if (promptMetadata) {
+        normalizedPlan.song_metadata = {
+          ...normalizedPlan.song_metadata,
+          title: promptMetadata.title,
+          description: promptMetadata.description,
+        };
+      }
+
+      const planText = JSON.stringify(normalizedPlan, null, 2);
       validateAndSetPlan(planText);
       toast({
         title: 'Plan generated!',
@@ -163,60 +209,66 @@ export function Step2Editors() {
 
       {/* Main content */}
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Prompt Section - Always visible and expanded */}
+        {/* Prompt Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.4 }}
         >
-          <Card className="relative overflow-hidden bg-muted/20">
+          <Card className="relative overflow-visible">
+            {/* Decorative corners */}
+            <div className="absolute -top-2 -left-2 w-4 h-4 border-l-2 border-t-2 border-primary/50 rounded-tl" />
+            <div className="absolute -top-2 -right-2 w-4 h-4 border-r-2 border-t-2 border-accent/50 rounded-tr" />
+
             <CardHeader className="pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                  <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-md">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                 </div>
                 <div>
-                  <CardTitle className="text-base font-medium">Prompt</CardTitle>
-                  <CardDescription className="text-xs">
-                    Edit the AI prompt before generating your plan
+                  <CardTitle className="text-xl font-display">AI Prompt</CardTitle>
+                  <CardDescription className="text-sm mt-0.5">
+                    Review and edit the prompt before generating your composition plan
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-0 pb-4">
+            <CardContent className="pt-2 pb-5">
               <Textarea
                 value={promptText}
                 onChange={(e) => setPromptText(e.target.value)}
                 placeholder="Your composition prompt..."
-                className="min-h-[120px] text-sm leading-relaxed rounded-xl border-border/60 bg-background/80 focus:bg-background transition-colors resize-none"
+                className="min-h-[160px] text-sm leading-relaxed rounded-xl border-border/60 bg-background/80 focus:bg-background transition-colors resize-none"
               />
-              <div className="flex items-center justify-between mt-3">
-                <p className="text-xs text-muted-foreground">
-                  This prompt was generated from your selections and story.
-                </p>
+              <p className="text-xs text-muted-foreground mt-3 mb-4">
+                This prompt was generated from your selections and story. Feel free to edit it before generating the plan.
+              </p>
+
+              {/* Generate Plan Button - prominent placement */}
+              <div className="flex justify-center">
                 <Button
                   onClick={handleGeneratePlan}
                   disabled={!promptText.trim() || isGeneratingPlan}
-                  size="sm"
-                  className="gap-2"
+                  size="lg"
+                  className="gap-2 min-w-[200px]"
                 >
                   {isGeneratingPlan ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating...
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Generating Plan...
                     </>
                   ) : compositionPlanText.trim() ? (
                     <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                       </svg>
                       Regenerate Plan
                     </>
                   ) : (
                     <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                       </svg>
                       Generate Plan
@@ -228,179 +280,109 @@ export function Step2Editors() {
           </Card>
         </motion.div>
 
-        {/* Composition Plan Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-        >
-          <Card className="relative overflow-visible">
-            {/* Decorative corners */}
-            <div className="absolute -top-2 -left-2 w-4 h-4 border-l-2 border-t-2 border-primary/50 rounded-tl" />
-            <div className="absolute -top-2 -right-2 w-4 h-4 border-r-2 border-t-2 border-accent/50 rounded-tr" />
+        {/* Composition Plan Section - Only shown after plan is generated */}
+        <AnimatePresence>
+          {compositionPlanText.trim() && (
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.98 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            >
+              <Card className="relative overflow-visible">
+                {/* Decorative corners */}
+                <div className="absolute -top-2 -left-2 w-4 h-4 border-l-2 border-t-2 border-secondary/50 rounded-tl" />
+                <div className="absolute -top-2 -right-2 w-4 h-4 border-r-2 border-t-2 border-accent/50 rounded-tr" />
 
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Composition Plan</CardTitle>
-                    <CardDescription>
-                      {canUseVisualEditor
-                        ? 'Edit your music structure visually or in JSON'
-                        : 'JSON structure that defines your music'}
-                    </CardDescription>
-                  </div>
-                </div>
-
-                {/* Editor mode toggle - only show when we have a valid plan */}
-                {compositionPlanText.trim() && canUseVisualEditor && (
-                  <EditorModeToggle
-                    mode={editorMode}
-                    onChange={setEditorMode}
-                  />
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              {/* Empty state */}
-              {!compositionPlanText.trim() ? (
-                <div className="relative">
-                  <div className="min-h-[320px] rounded-xl border-2 border-dashed border-border/60 bg-muted/20 flex flex-col items-center justify-center p-8 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-display text-lg text-foreground mb-2">No composition plan yet</h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                      Generate a composition plan from your prompt, or paste your own JSON structure below.
-                    </p>
-                    <Button
-                      onClick={handleGeneratePlan}
-                      disabled={!promptText.trim() || isGeneratingPlan}
-                      size="lg"
-                      className="gap-2"
-                    >
-                      {isGeneratingPlan ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Generating Plan...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                          </svg>
-                          Generate Composition Plan
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  {/* Or paste option */}
-                  <div className="mt-4">
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-border/40" />
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary to-secondary/70 flex items-center justify-center text-secondary-foreground shadow-md">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                        </svg>
                       </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-3 text-muted-foreground">or paste JSON</span>
+                      <div>
+                        <CardTitle className="text-xl font-display">Composition Plan</CardTitle>
+                        <CardDescription className="text-sm mt-0.5">
+                          {canUseVisualEditor
+                            ? 'Edit your music structure visually or in JSON'
+                            : 'JSON structure that defines your music'}
+                        </CardDescription>
                       </div>
                     </div>
-                    <Textarea
-                      value={compositionPlanText}
-                      onChange={(e) => handlePlanChange(e.target.value)}
-                      placeholder='{"composition_plan": {...}}'
-                      className="mt-4 min-h-[100px] font-mono-code text-xs leading-relaxed rounded-xl border-border/60 bg-background/50 focus:bg-background transition-colors resize-none"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <AnimatePresence mode="wait">
-                  {editorMode === 'visual' && canUseVisualEditor ? (
-                    <VisualPlanEditor
-                      key="visual"
-                      plan={compositionPlanObject as CompositionPlanData}
-                      onUpdate={updatePlanObject}
-                    />
-                  ) : (
-                    <motion.div
-                      key="json"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
-                      className="space-y-4"
-                    >
-                      {/* JSON editor */}
-                      <div className="relative">
-                        <Textarea
-                          value={compositionPlanText}
-                          onChange={(e) => handlePlanChange(e.target.value)}
-                          placeholder="Your composition plan JSON..."
-                          className={`min-h-[320px] font-mono-code text-xs leading-relaxed rounded-xl border-border/60 bg-background/50 focus:bg-background transition-colors resize-none ${
-                            displayError ? 'border-destructive/60 focus-visible:ring-destructive/50' : ''
-                          }`}
-                        />
-                        {displayError && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mt-2 flex items-start gap-2 text-xs text-destructive bg-destructive/5 rounded-lg p-3"
-                          >
-                            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                            <span className="font-mono-code">{displayError}</span>
-                          </motion.div>
-                        )}
-                      </div>
 
-                      {/* Action buttons */}
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <Button
-                          variant="outline"
-                          onClick={handleFormatJson}
-                          disabled={!compositionPlanText.trim()}
-                          className="flex-1"
-                        >
-                          <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
-                          </svg>
-                          Format JSON
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={handleGeneratePlan}
-                          disabled={!promptText.trim() || isGeneratingPlan}
-                          className="flex-1"
-                        >
-                          {isGeneratingPlan ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Regenerating...
-                            </>
-                          ) : (
-                            <>
-                              <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                              </svg>
-                              Regenerate Plan
-                            </>
+                    {/* Editor mode toggle */}
+                    {canUseVisualEditor && (
+                      <EditorModeToggle
+                        mode={editorMode}
+                        onChange={setEditorMode}
+                      />
+                    )}
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <AnimatePresence mode="wait">
+                    {editorMode === 'visual' && canUseVisualEditor ? (
+                      <VisualPlanEditor
+                        key="visual"
+                        plan={compositionPlanObject as CompositionPlanData}
+                        onUpdate={updatePlanObject}
+                      />
+                    ) : (
+                      <motion.div
+                        key="json"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-4"
+                      >
+                        {/* JSON editor */}
+                        <div className="relative">
+                          <Textarea
+                            value={compositionPlanText}
+                            onChange={(e) => handlePlanChange(e.target.value)}
+                            placeholder="Your composition plan JSON..."
+                            className={`min-h-[320px] font-mono-code text-xs leading-relaxed rounded-xl border-border/60 bg-background/50 focus:bg-background transition-colors resize-none ${
+                              displayError ? 'border-destructive/60 focus-visible:ring-destructive/50' : ''
+                            }`}
+                          />
+                          {displayError && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="mt-2 flex items-start gap-2 text-xs text-destructive bg-destructive/5 rounded-lg p-3"
+                            >
+                              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                              <span className="font-mono-code">{displayError}</span>
+                            </motion.div>
                           )}
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+                        </div>
+
+                        {/* Format JSON button */}
+                        <div className="flex justify-end">
+                          <Button
+                            variant="outline"
+                            onClick={handleFormatJson}
+                            disabled={!compositionPlanText.trim()}
+                            size="sm"
+                          >
+                            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+                            </svg>
+                            Format JSON
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Render Music Button */}
         <AnimatePresence>

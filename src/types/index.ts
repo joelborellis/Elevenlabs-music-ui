@@ -70,17 +70,17 @@ export const DELIVERY_AND_CONTROL_OPTIONS: SelectionOption<DeliveryAndControl>[]
 
 // Section within the composition plan
 export interface Section {
-  name: string;
+  section_name: string;
   duration_ms: number;
-  positive_style?: string[];
-  negative_style?: string[];
+  positive_local_styles?: string[];
+  negative_local_styles?: string[];
   lines?: string[];
 }
 
 // The core composition plan structure
 export interface CompositionPlanCore {
-  positive_style?: string[];
-  negative_style?: string[];
+  positive_global_styles?: string[];
+  negative_global_styles?: string[];
   sections: Section[];
 }
 
@@ -106,6 +106,12 @@ export type CompositionPlan = CompositionPlanData | Record<string, unknown>;
 // Editor mode for visual vs JSON editing
 export type EditorMode = 'visual' | 'json';
 
+// Prompt metadata from /prompt endpoint
+export interface PromptMetadata {
+  title: string;
+  description: string;
+}
+
 export interface AudioResult {
   audioUrl: string;
   filename: string;
@@ -128,6 +134,7 @@ export interface WizardState {
 
   // Step 2 data
   promptText: string;
+  promptMetadata: PromptMetadata | null;
   compositionPlanText: string;
   compositionPlanObject: CompositionPlan | null;
   planJsonError: string | null;
@@ -160,6 +167,7 @@ export interface WizardActions {
   
   // Step 2 actions
   setPromptText: (text: string) => void;
+  setPromptMetadata: (metadata: PromptMetadata | null) => void;
   setCompositionPlanText: (text: string) => void;
   validateAndSetPlan: (text: string) => boolean;
   updatePlanObject: (updater: (plan: CompositionPlanData) => CompositionPlanData) => void;

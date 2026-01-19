@@ -19,7 +19,7 @@ export function VisualPlanEditor({ plan, onUpdate }: VisualPlanEditorProps) {
       ...p,
       composition_plan: {
         ...p.composition_plan,
-        positive_style: styles,
+        positive_global_styles: styles,
       },
     }));
   };
@@ -29,7 +29,7 @@ export function VisualPlanEditor({ plan, onUpdate }: VisualPlanEditorProps) {
       ...p,
       composition_plan: {
         ...p.composition_plan,
-        negative_style: styles,
+        negative_global_styles: styles,
       },
     }));
   };
@@ -77,10 +77,10 @@ export function VisualPlanEditor({ plan, onUpdate }: VisualPlanEditorProps) {
 
   const handleAddSection = () => {
     const newSection: Section = {
-      name: `Section ${compositionPlan.sections.length + 1}`,
+      section_name: `Section ${compositionPlan.sections.length + 1}`,
       duration_ms: 4000,
-      positive_style: [],
-      negative_style: [],
+      positive_local_styles: [],
+      negative_local_styles: [],
       lines: [],
     };
     onUpdate((p) => ({
@@ -103,8 +103,8 @@ export function VisualPlanEditor({ plan, onUpdate }: VisualPlanEditorProps) {
       {/* Global Styles and Metadata side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <GlobalStylesCard
-          positiveStyles={compositionPlan.positive_style || []}
-          negativeStyles={compositionPlan.negative_style || []}
+          positiveStyles={compositionPlan.positive_global_styles || []}
+          negativeStyles={compositionPlan.negative_global_styles || []}
           onPositiveChange={handlePositiveStylesChange}
           onNegativeChange={handleNegativeStylesChange}
         />

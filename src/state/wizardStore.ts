@@ -8,7 +8,8 @@ import type {
   DeliveryAndControl,
   AudioResult,
   EditorMode,
-  CompositionPlanData
+  CompositionPlanData,
+  PromptMetadata
 } from '@/types';
 
 const initialState: WizardState = {
@@ -21,6 +22,7 @@ const initialState: WizardState = {
     instrumental_only: false,
   },
   promptText: '',
+  promptMetadata: null,
   compositionPlanText: '',
   compositionPlanObject: null,
   planJsonError: null,
@@ -79,7 +81,9 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
 
   // Step 2 actions
   setPromptText: (text: string) => set({ promptText: text }),
-  
+
+  setPromptMetadata: (metadata: PromptMetadata | null) => set({ promptMetadata: metadata }),
+
   setCompositionPlanText: (text: string) => set({ compositionPlanText: text }),
   
   validateAndSetPlan: (text: string) => {

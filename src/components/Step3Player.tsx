@@ -1,16 +1,33 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import gsap from 'gsap';
-import { Download, RotateCcw } from 'lucide-react';
+import { Download, RotateCcw, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useWizardStore } from '@/state/wizardStore';
 import type { CompositionPlan } from '@/types';
 
+// Format time in mm:ss
+function formatTime(seconds: number): string {
+  if (!isFinite(seconds)) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 export function Step3Player() {
   const { audioResult, compositionPlanObject, reset } = useWizardStore();
   const barsRef = useRef<HTMLDivElement[]>([]);
   const vinylRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  // Audio player state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
 
   // Extract song title from plan
   const songTitle = (
@@ -64,15 +81,19 @@ export function Step3Player() {
     }
   }, []);
 
-  // Vinyl spin animation
+  // Vinyl spin animation - only when playing
   useEffect(() => {
     if (vinylRef.current) {
-      gsap.to(vinylRef.current, {
-        rotation: 360,
-        duration: 4,
-        repeat: -1,
-        ease: 'none',
-      });
+      if (isPlaying) {
+        gsap.to(vinylRef.current, {
+          rotation: '+=360',
+          duration: 4,
+          repeat: -1,
+          ease: 'none',
+        });
+      } else {
+        gsap.killTweensOf(vinylRef.current);
+      }
 
       return () => {
         if (vinylRef.current) {
@@ -80,7 +101,66 @@ export function Step3Player() {
         }
       };
     }
-  }, []);
+  }, [isPlaying]);
+
+  // Audio player controls
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    audioRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+    if (newVolume === 0) {
+      setIsMuted(true);
+    } else if (isMuted) {
+      setIsMuted(false);
+    }
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressRef.current || !audioRef.current) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    const newTime = percentage * duration;
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   if (!audioResult) {
     return (
@@ -215,16 +295,87 @@ export function Step3Player() {
               </div>
             </div>
 
-            {/* Native audio player - styled container */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10 rounded-xl" />
+            {/* Custom audio player */}
+            <div className="relative bg-foreground/95 rounded-2xl p-4 shadow-lg">
+              {/* Hidden native audio element */}
               <audio
-                controls
-                className="w-full h-12 relative z-10"
+                ref={audioRef}
                 src={audioResult.audioUrl}
-              >
-                Your browser does not support the audio element.
-              </audio>
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onEnded={handleEnded}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+              />
+
+              <div className="flex items-center gap-4">
+                {/* Play/Pause button */}
+                <button
+                  onClick={togglePlay}
+                  className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-md"
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                >
+                  {isPlaying ? (
+                    <Pause className="w-5 h-5 ml-0" fill="currentColor" />
+                  ) : (
+                    <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+                  )}
+                </button>
+
+                {/* Progress section */}
+                <div className="flex-1 space-y-1">
+                  {/* Progress bar */}
+                  <div
+                    ref={progressRef}
+                    onClick={handleProgressClick}
+                    className="h-2 bg-background/30 rounded-full cursor-pointer group relative overflow-hidden"
+                  >
+                    {/* Progress fill */}
+                    <div
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-accent rounded-full transition-all"
+                      style={{ width: `${progressPercentage}%` }}
+                    />
+                    {/* Hover highlight */}
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {/* Playhead */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ left: `calc(${progressPercentage}% - 6px)` }}
+                    />
+                  </div>
+
+                  {/* Time display */}
+                  <div className="flex justify-between text-xs font-mono-code text-background/70">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+                </div>
+
+                {/* Volume controls */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleMute}
+                    className="w-8 h-8 rounded-lg bg-background/20 hover:bg-background/30 text-background/80 hover:text-background flex items-center justify-center transition-colors"
+                    aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted || volume === 0 ? (
+                      <VolumeX className="w-4 h-4" />
+                    ) : (
+                      <Volume2 className="w-4 h-4" />
+                    )}
+                  </button>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={isMuted ? 0 : volume}
+                    onChange={handleVolumeChange}
+                    className="w-16 h-1 bg-background/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
+                    aria-label="Volume"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Action buttons */}

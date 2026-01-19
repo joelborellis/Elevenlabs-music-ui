@@ -113,6 +113,7 @@ export function Step0UserNarrative() {
     setUserNarrative,
     selections,
     setPromptText,
+    setPromptMetadata,
     nextStep,
     prevStep,
     isGeneratingPrompt,
@@ -126,8 +127,9 @@ export function Step0UserNarrative() {
   const handleGenerateAndContinue = async () => {
     setIsGeneratingPrompt(true);
     try {
-      const prompt = await generatePromptFromSelections(selections, userNarrative);
-      setPromptText(prompt);
+      const result = await generatePromptFromSelections(selections, userNarrative);
+      setPromptText(result.prompt);
+      setPromptMetadata({ title: result.title, description: result.description });
       toast({
         title: 'Prompt generated!',
         description: 'Your composition prompt is ready for editing.',

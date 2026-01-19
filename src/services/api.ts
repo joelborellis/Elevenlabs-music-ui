@@ -14,10 +14,6 @@ export const MOCK_MODE_PROMPT = false;  // Use real /prompt endpoint
 export const MOCK_MODE_PLAN = false;    // Use real /plan endpoint
 export const MOCK_MODE_RENDER = false;  // Use real /render endpoint
 
-/**
- * Default music length in milliseconds for the /plan endpoint
- */
-const DEFAULT_MUSIC_LENGTH_MS = 30000;
 
 /**
  * Simulated network latency range (ms)
@@ -182,6 +178,8 @@ const SAMPLE_PLAN: CompositionPlan = {
  */
 interface PromptGenerationResponse {
   prompt: string;
+  title: string;
+  description: string;
   request_id: string;
   timestamp: string;
   input_parameters: {
@@ -190,7 +188,18 @@ interface PromptGenerationResponse {
     delivery_and_control: string;
     instrumental_only: boolean;
     user_narrative: string;
+    title: string;
+    description: string;
   };
+}
+
+/**
+ * Parsed result from generatePromptFromSelections
+ */
+export interface PromptResult {
+  prompt: string;
+  title: string;
+  description: string;
 }
 
 /**
@@ -224,14 +233,14 @@ export function getDownloadUrl(filename: string): string {
 
 /**
  * Generate a prompt from user selections.
- * 
+ *
  * @param selections - The user's step 1 selections
  * @param userNarrative - The user's narrative describing their intent
- * @returns Promise<string> - The generated prompt text
- * 
+ * @returns Promise<PromptResult> - The generated prompt text with title and description
+ *
  * Calls POST http://localhost:8000/prompt
  */
-export async function generatePromptFromSelections(selections: Selections, userNarrative: string): Promise<string> {
+export async function generatePromptFromSelections(selections: Selections, userNarrative: string): Promise<PromptResult> {
   const payload = {
     project_blueprint: selections.project_blueprint,
     sound_profile: selections.sound_profile,
@@ -243,7 +252,11 @@ export async function generatePromptFromSelections(selections: Selections, userN
 
   if (MOCK_MODE_PROMPT) {
     await delay(randomLatency());
-    return generateMockPrompt(selections);
+    return {
+      prompt: generateMockPrompt(selections),
+      title: 'Untitled Song',
+      description: 'A custom music composition',
+    };
   }
 
   const response = await fetch(`${API_BASE_URL}/prompt`, {
@@ -259,23 +272,25 @@ export async function generatePromptFromSelections(selections: Selections, userN
 
   const data: PromptGenerationResponse = await response.json();
   console.log('POST /prompt response:', data);
-  
-  return data.prompt;
+
+  return {
+    prompt: data.prompt,
+    title: data.title,
+    description: data.description,
+  };
 }
 
 /**
  * Generate a composition plan from prompt text.
- * 
+ *
  * @param promptText - The prompt text (editable by user)
- * @param musicLengthMs - The desired music length in milliseconds (default: 30000)
  * @returns Promise<CompositionPlan> - The composition plan JSON
- * 
+ *
  * Calls POST http://localhost:8000/plan
  */
-export async function generateCompositionPlan(promptText: string, musicLengthMs: number = DEFAULT_MUSIC_LENGTH_MS): Promise<CompositionPlan> {
+export async function generateCompositionPlan(promptText: string): Promise<CompositionPlan> {
   const payload = {
     prompt: promptText,
-    music_length_ms: musicLengthMs,
   };
   console.log('POST /plan payload:', JSON.stringify(payload, null, 2));
 
@@ -315,17 +330,22 @@ export async function generateCompositionPlan(promptText: string, musicLengthMs:
 export async function createMusicFromPlan(
   plan: CompositionPlan
 ): Promise<{ audioUrl: string; filename: string; mimeType: string; downloadUrl: string; fileSizeBytes: number }> {
-  console.log('POST /render payload:', JSON.stringify(plan, null, 2));
+  // Unwrap composition_plan if it's in wrapped format
+  // The render endpoint expects the plan content directly, not wrapped
+  const wrapped = plan as { composition_plan?: CompositionPlan };
+  const renderPayload = wrapped.composition_plan || plan;
+
+  console.log('POST /render payload:', JSON.stringify(renderPayload, null, 2));
 
   if (MOCK_MODE_RENDER) {
     await delay(randomLatency() * 1.5); // Music generation takes longer
-    console.log('Creating music from plan:', plan);
-    
+    console.log('Creating music from plan:', renderPayload);
+
     // Extract title from plan if available
-    const metadata = plan.song_metadata as { title?: string } | undefined;
+    const metadata = (plan as { song_metadata?: { title?: string } }).song_metadata;
     const title = metadata?.title || 'composition';
     const filename = `${title.toLowerCase().replace(/\s+/g, '-')}.mp3`;
-    
+
     return {
       audioUrl: createMockAudioUrl(),
       filename,
@@ -338,7 +358,7 @@ export async function createMusicFromPlan(
   const response = await fetch(`${API_BASE_URL}/render`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(plan),
+    body: JSON.stringify(renderPayload),
   });
 
   if (!response.ok) {

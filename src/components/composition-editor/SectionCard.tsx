@@ -46,8 +46,8 @@ export function SectionCard({
 
         <div className="flex-1 min-w-0">
           <InlineTextInput
-            value={section.name}
-            onChange={(name) => updateField('name', name)}
+            value={section.section_name}
+            onChange={(section_name) => updateField('section_name', section_name)}
             placeholder="Section name"
             className="font-medium text-foreground"
             as="h4"
@@ -101,8 +101,8 @@ export function SectionCard({
                 Positive Styles
               </label>
               <TagInput
-                tags={section.positive_style || []}
-                onChange={(tags) => updateField('positive_style', tags)}
+                tags={section.positive_local_styles || []}
+                onChange={(tags) => updateField('positive_local_styles', tags)}
                 placeholder="Add style..."
                 variant="positive"
               />
@@ -113,8 +113,8 @@ export function SectionCard({
                 Negative Styles
               </label>
               <TagInput
-                tags={section.negative_style || []}
-                onChange={(tags) => updateField('negative_style', tags)}
+                tags={section.negative_local_styles || []}
+                onChange={(tags) => updateField('negative_local_styles', tags)}
                 placeholder="Add style..."
                 variant="negative"
               />
