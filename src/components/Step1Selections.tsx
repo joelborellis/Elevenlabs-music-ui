@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, ChevronDown, Sparkles, Info, Lightbulb } from 'lucide-react';
+import { ArrowRight, ChevronDown, Sparkles, Info, Lightbulb, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -90,8 +90,14 @@ function OptionCard<T extends string>({
         <label className="flex items-start gap-3 p-3 cursor-pointer">
           <RadioGroupItem value={option.value} id={option.value} className="mt-0.5" />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="block font-medium text-sm text-foreground">{option.label}</span>
+              {option.instrumental && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-400 text-[10px] font-medium border border-violet-500/20">
+                  <Music className="w-2.5 h-2.5" />
+                  Instrumental
+                </span>
+              )}
               {option.recommended && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
                   <Sparkles className="w-2.5 h-2.5" />

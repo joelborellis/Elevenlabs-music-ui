@@ -228,9 +228,36 @@ export function Step2Editors() {
                 placeholder="Your composition prompt..."
                 className="min-h-[160px] text-sm leading-relaxed rounded-xl border-border/60 bg-background/80 focus:bg-background transition-colors resize-none"
               />
-              <p className="text-xs text-muted-foreground mt-3 mb-4">
-                This prompt was generated from your selections and story. Feel free to edit it before generating the plan.
-              </p>
+              <div className="flex items-center justify-between mt-3 mb-4">
+                <p className="text-xs text-muted-foreground">
+                  This prompt was generated from your selections and story. Feel free to edit it before generating the plan.
+                </p>
+                {/* Character count indicator */}
+                {(() => {
+                  const charCount = promptText.length;
+                  const maxChars = 4100;
+                  const percentage = (charCount / maxChars) * 100;
+                  const isOverLimit = charCount > maxChars;
+                  const statusColor = isOverLimit || percentage >= 90
+                    ? 'text-red-500'
+                    : percentage >= 75
+                    ? 'text-yellow-500'
+                    : 'text-green-500';
+                  const dotColor = isOverLimit || percentage >= 90
+                    ? 'bg-red-500'
+                    : percentage >= 75
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500';
+
+                  return (
+                    <div className={`flex items-center gap-1.5 text-xs font-mono-code shrink-0 ml-4 ${statusColor}`}>
+                      <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                      <span>{charCount.toLocaleString()}</span>
+                      <span className="text-muted-foreground">/ {maxChars.toLocaleString()}</span>
+                    </div>
+                  );
+                })()}
+              </div>
 
               {/* Generate Plan Button - prominent placement */}
               <div className="flex justify-center">

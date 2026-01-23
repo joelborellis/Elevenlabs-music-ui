@@ -42,22 +42,11 @@ export interface ExtendedSelectionOption<T extends string> extends SelectionOpti
   whenToChoose: string[];    // Use cases
   specs?: Record<string, string>; // Technical specs like length, BPM
   recommended?: boolean;     // Whether this is a recommended default
+  instrumental?: boolean;    // Whether this is an instrumental-only preset
 }
 
 export const PROJECT_BLUEPRINT_OPTIONS: ExtendedSelectionOption<ProjectBlueprint>[] = [
-  {
-    value: 'ad_brand_fast_hook',
-    label: 'Ad/Brand Spot',
-    description: '30 seconds, no vocals, punchy ending',
-    shortDescription: '30s ad with fast hook',
-    details: 'Creates attention-grabbing music that hooks listeners immediately, builds quickly, and ends with a memorable punch. Leaves space for voiceovers.',
-    whenToChoose: [
-      'Making short advertisements or promotional videos',
-      'Need background music that won\'t compete with voiceover',
-      'Creating content for social media platforms',
-    ],
-    specs: { 'Length': '30 seconds', 'Vocals': 'None (voiceover-friendly)', 'Ending': 'Punchy button' },
-  },
+  // Instrumental presets first
   {
     value: 'podcast_voiceover_loop',
     label: 'Podcast Bed',
@@ -70,6 +59,7 @@ export const PROJECT_BLUEPRINT_OPTIONS: ExtendedSelectionOption<ProjectBlueprint
       'Need a calming backdrop that doesn\'t distract',
     ],
     specs: { 'Length': '60 seconds', 'Vocals': 'None', 'Ending': 'Seamless loop' },
+    instrumental: true,
   },
   {
     value: 'video_game_action_loop',
@@ -83,6 +73,7 @@ export const PROJECT_BLUEPRINT_OPTIONS: ExtendedSelectionOption<ProjectBlueprint
       'Want clear rising and falling intensity',
     ],
     specs: { 'Length': '90 seconds', 'Vocals': 'None', 'Structure': 'Intro + Loop + Exit' },
+    instrumental: true,
   },
   {
     value: 'meditation_sleep',
@@ -96,6 +87,21 @@ export const PROJECT_BLUEPRINT_OPTIONS: ExtendedSelectionOption<ProjectBlueprint
       'Creating content for relaxation or sleep',
     ],
     specs: { 'Length': 'Auto (usually longer)', 'Vocals': 'None', 'Ending': 'Gentle fade' },
+    instrumental: true,
+  },
+  // Non-instrumental presets
+  {
+    value: 'ad_brand_fast_hook',
+    label: 'Ad/Brand Spot',
+    description: '30 seconds, no vocals, punchy ending',
+    shortDescription: '30s ad with fast hook',
+    details: 'Creates attention-grabbing music that hooks listeners immediately, builds quickly, and ends with a memorable punch. Leaves space for voiceovers.',
+    whenToChoose: [
+      'Making short advertisements or promotional videos',
+      'Need background music that won\'t compete with voiceover',
+      'Creating content for social media platforms',
+    ],
+    specs: { 'Length': '30 seconds', 'Vocals': 'None (voiceover-friendly)', 'Ending': 'Punchy button' },
   },
   {
     value: 'standalone_song_mini',
