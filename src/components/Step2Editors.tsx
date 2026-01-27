@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, AlertCircle, Sparkles, Music, RefreshCw, Code2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useWizardStore, usePlanValid } from '@/state/wizardStore';
-import { generateCompositionPlan, createMusicFromPlan } from '@/services/api';
+import { generateCompositionPlan, renderMusic } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
 import { VisualPlanEditor, EditorModeToggle } from '@/components/composition-editor';
-import type { CompositionPlan, CompositionPlanData } from '@/types';
+import type { CompositionPlan, CompositionPlanData, RenderProgress } from '@/types';
 
 // Type guard to check if plan has required structure for visual editor
 // Handles both wrapped format {composition_plan: {...}} and direct format {sections: [...]}
@@ -76,6 +77,8 @@ export function Step2Editors() {
 
   const isPlanValid = usePlanValid();
   const [localJsonError, setLocalJsonError] = useState<string | null>(null);
+  // Use local state for render progress to ensure immediate re-renders
+  const [renderProgress, setRenderProgress] = useState<RenderProgress | null>(null);
 
   const handleGeneratePlan = async () => {
     setIsGeneratingPlan(true);
@@ -136,8 +139,25 @@ export function Step2Editors() {
     if (!compositionPlanObject) return;
 
     setIsCreatingMusic(true);
+    setRenderProgress(null);
     try {
-      const result = await createMusicFromPlan(compositionPlanObject as CompositionPlan);
+      // Extract title - prioritize user-edited title from composition plan over original promptMetadata
+      const planWithMetadata = compositionPlanObject as CompositionPlan & {
+        song_metadata?: { title?: string };
+      };
+      const title = planWithMetadata.song_metadata?.title || promptMetadata?.title;
+      
+      const result = await renderMusic(
+        compositionPlanObject as CompositionPlan,
+        title,
+        (progress) => {
+          console.log('Setting render progress:', progress);
+          // Use flushSync to force immediate render, preventing React from batching rapid updates
+          flushSync(() => {
+            setRenderProgress(progress);
+          });
+        }
+      );
       setAudioResult(result);
       toast({
         title: 'Music created!',
@@ -153,6 +173,7 @@ export function Step2Editors() {
       });
     } finally {
       setIsCreatingMusic(false);
+      setRenderProgress(null);
     }
   };
 
@@ -391,7 +412,7 @@ export function Step2Editors() {
           )}
         </AnimatePresence>
 
-        {/* Render Music Button */}
+        {/* Render Music Button and Progress */}
         <AnimatePresence>
           {isPlanValid && (
             <motion.div
@@ -399,8 +420,35 @@ export function Step2Editors() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="flex justify-center pt-4"
+              className="flex flex-col items-center gap-4 pt-4"
             >
+              {/* Progress UI */}
+              {isCreatingMusic && renderProgress && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="w-full max-w-md space-y-3"
+                >
+                  {/* Progress bar */}
+                  <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="bg-accent h-2.5 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${renderProgress.percent}%` }}
+                    />
+                  </div>
+
+                  {/* Progress text */}
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-foreground">
+                      {renderProgress.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {renderProgress.percent}% complete
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
               <Button
                 onClick={handleCreateMusic}
                 disabled={isCreatingMusic}
@@ -410,7 +458,7 @@ export function Step2Editors() {
                 {isCreatingMusic ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Creating Your Music...
+                    {renderProgress ? `Rendering... ${renderProgress.percent}%` : 'Creating Your Music...'}
                   </>
                 ) : (
                   <>

@@ -9,7 +9,8 @@ import type {
   AudioResult,
   EditorMode,
   CompositionPlanData,
-  PromptMetadata
+  PromptMetadata,
+  RenderProgress
 } from '@/types';
 
 const initialState: WizardState = {
@@ -31,6 +32,7 @@ const initialState: WizardState = {
   isGeneratingPrompt: false,
   isGeneratingPlan: false,
   isCreatingMusic: false,
+  renderProgress: null,
 };
 
 export const useWizardStore = create<WizardState & WizardActions>((set, get) => ({
@@ -133,6 +135,9 @@ export const useWizardStore = create<WizardState & WizardActions>((set, get) => 
   setIsGeneratingPrompt: (value: boolean) => set({ isGeneratingPrompt: value }),
   setIsGeneratingPlan: (value: boolean) => set({ isGeneratingPlan: value }),
   setIsCreatingMusic: (value: boolean) => set({ isCreatingMusic: value }),
+
+  // Render progress
+  setRenderProgress: (progress: RenderProgress | null) => set({ renderProgress: progress }),
 }));
 
 // Selector helpers

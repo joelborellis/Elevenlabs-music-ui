@@ -16,7 +16,7 @@ function formatTime(seconds: number): string {
 }
 
 export function Step3Player() {
-  const { audioResult, compositionPlanObject, reset } = useWizardStore();
+  const { audioResult, compositionPlanObject, promptMetadata, reset } = useWizardStore();
   const barsRef = useRef<HTMLDivElement[]>([]);
   const vinylRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -29,18 +29,19 @@ export function Step3Player() {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Extract song title from plan
-  const songTitle = (
-    compositionPlanObject as CompositionPlan & {
-      song_metadata?: { title?: string; description?: string };
-    }
-  )?.song_metadata?.title || 'Your Composition';
+  // Extract song title - prioritize edited title from composition plan over original promptMetadata
+  const planWithMetadata = compositionPlanObject as CompositionPlan & {
+    song_metadata?: { title?: string; description?: string };
+  };
+  
+  const songTitle = 
+    planWithMetadata?.song_metadata?.title ||
+    promptMetadata?.title ||
+    'Your Composition';
 
-  const songDescription = (
-    compositionPlanObject as CompositionPlan & {
-      song_metadata?: { description?: string };
-    }
-  )?.song_metadata?.description;
+  const songDescription = 
+    planWithMetadata?.song_metadata?.description ||
+    promptMetadata?.description;
 
   // GSAP waveform animation
   useEffect(() => {

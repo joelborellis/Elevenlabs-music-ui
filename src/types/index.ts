@@ -385,6 +385,46 @@ export interface AudioResult {
   fileSizeBytes: number;
 }
 
+// WebSocket message types for render progress
+export interface WSProgressMessage {
+  type: 'progress';
+  stage: string;
+  progress_percent: number;
+  message: string;
+  timestamp: string;
+}
+
+export interface WSResultMessage {
+  type: 'result';
+  data: {
+    filename: string;
+    file_path: string;
+    download_url: string;
+    stream_url: string;
+    content_type: string;
+    file_size_bytes: number;
+    composition_plan: object | null;
+    song_metadata: object | null;
+    request_id: string;
+    timestamp: string;
+  };
+}
+
+export interface WSErrorMessage {
+  type: 'error';
+  error_code: 'INVALID_REQUEST' | 'VALIDATION_ERROR' | 'SERVER_ERROR';
+  message: string;
+  timestamp: string;
+}
+
+export type WSMessage = WSProgressMessage | WSResultMessage | WSErrorMessage;
+
+export interface RenderProgress {
+  stage: string;
+  percent: number;
+  message: string;
+}
+
 export type WizardStep = 0 | 1 | 2 | 3;
 
 export interface WizardState {
@@ -412,6 +452,9 @@ export interface WizardState {
   isGeneratingPrompt: boolean;
   isGeneratingPlan: boolean;
   isCreatingMusic: boolean;
+
+  // Render progress (WebSocket)
+  renderProgress: RenderProgress | null;
 }
 
 export interface WizardActions {
@@ -445,4 +488,7 @@ export interface WizardActions {
   setIsGeneratingPrompt: (value: boolean) => void;
   setIsGeneratingPlan: (value: boolean) => void;
   setIsCreatingMusic: (value: boolean) => void;
+
+  // Render progress
+  setRenderProgress: (progress: RenderProgress | null) => void;
 }

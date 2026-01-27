@@ -1,5 +1,6 @@
-import type { Selections, CompositionPlan } from '@/types';
+import type { Selections, CompositionPlan, CompositionPlanData, RenderProgress, AudioResult } from '@/types';
 import { createMockAudioUrl } from '@/lib/mockAudio';
+import { renderWithWebSocket } from './websocket';
 
 /**
  * Backend API base URL
@@ -323,17 +324,34 @@ export async function generateCompositionPlan(promptText: string): Promise<Compo
  * Note: This can take 30-120 seconds depending on complexity.
  * 
  * @param plan - The composition plan JSON (editable by user)
+ * @param title - Optional title for the music (used for filename)
  * @returns Promise<{ audioUrl: string; filename: string; mimeType: string; downloadUrl: string; fileSizeBytes: number }>
  * 
  * Calls POST http://localhost:8000/render
  */
 export async function createMusicFromPlan(
-  plan: CompositionPlan
+  plan: CompositionPlan,
+  title?: string
 ): Promise<{ audioUrl: string; filename: string; mimeType: string; downloadUrl: string; fileSizeBytes: number }> {
   // Unwrap composition_plan if it's in wrapped format
-  // The render endpoint expects the plan content directly, not wrapped
+  // The render endpoint expects a flat structure with title at top level
   const wrapped = plan as { composition_plan?: CompositionPlan };
-  const renderPayload = wrapped.composition_plan || plan;
+  const planContent = wrapped.composition_plan || plan;
+  
+  // Extract the core plan properties (flatten structure)
+  const core = planContent as { 
+    positive_global_styles?: string[];
+    negative_global_styles?: string[];
+    sections: unknown[];
+  };
+  
+  // Build the new render payload with title at top level
+  const renderPayload = {
+    ...(title && { title }),
+    positive_global_styles: core.positive_global_styles,
+    negative_global_styles: core.negative_global_styles,
+    sections: core.sections,
+  };
 
   console.log('POST /render payload:', JSON.stringify(renderPayload, null, 2));
 
@@ -341,10 +359,9 @@ export async function createMusicFromPlan(
     await delay(randomLatency() * 1.5); // Music generation takes longer
     console.log('Creating music from plan:', renderPayload);
 
-    // Extract title from plan if available
-    const metadata = (plan as { song_metadata?: { title?: string } }).song_metadata;
-    const title = metadata?.title || 'composition';
-    const filename = `${title.toLowerCase().replace(/\s+/g, '-')}.mp3`;
+    // Use title parameter or fallback to 'composition'
+    const titleForFilename = title || 'composition';
+    const filename = `${titleForFilename.toLowerCase().replace(/\s+/g, '-')}.mp3`;
 
     return {
       audioUrl: createMockAudioUrl(),
@@ -387,4 +404,38 @@ export async function createMusicFromPlan(
     downloadUrl,
     fileSizeBytes: data.file_size_bytes,
   };
+}
+
+/**
+ * Render music with WebSocket progress updates, falling back to REST API if needed.
+ * 
+ * @param plan - The composition plan (wrapped or unwrapped format)
+ * @param title - Optional title for the track
+ * @param onProgress - Optional callback for progress updates (enables WebSocket mode)
+ * @returns Promise resolving to AudioResult
+ */
+export async function renderMusic(
+  plan: CompositionPlan,
+  title?: string,
+  onProgress?: (progress: RenderProgress) => void
+): Promise<AudioResult> {
+  // Normalize the plan to wrapped format
+  const wrapped = plan as CompositionPlanData;
+  const normalizedPlan: CompositionPlanData = wrapped.composition_plan
+    ? wrapped
+    : {
+        composition_plan: plan as unknown as CompositionPlanData['composition_plan'],
+      };
+
+  // Try WebSocket first if progress callback is provided and WebSocket is available
+  if (onProgress && 'WebSocket' in window && !MOCK_MODE_RENDER) {
+    try {
+      return await renderWithWebSocket(normalizedPlan, title, onProgress);
+    } catch (wsError) {
+      console.warn('WebSocket render failed, falling back to REST:', wsError);
+    }
+  }
+
+  // Fallback to REST API
+  return await createMusicFromPlan(plan, title);
 }
