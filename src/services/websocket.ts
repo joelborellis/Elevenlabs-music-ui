@@ -45,8 +45,8 @@ export async function renderWithWebSocket(
                 type: 'render',
                 composition_plan: {
                   ...(title && { title }),
-                  positive_global_styles: core.positive_global_styles,
-                  negative_global_styles: core.negative_global_styles,
+                  positive_global_styles: core.positive_global_styles || [],
+                  negative_global_styles: core.negative_global_styles || [],
                   sections: core.sections,
                 },
               };

@@ -25,3 +25,6 @@ dist-ssr
 
 # AI Generated Files
 .claude
+
+# MCP Server secrets
+.env

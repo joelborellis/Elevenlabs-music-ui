@@ -93,15 +93,16 @@ export const PROJECT_BLUEPRINT_OPTIONS: ExtendedSelectionOption<ProjectBlueprint
   {
     value: 'ad_brand_fast_hook',
     label: 'Ad/Brand Spot',
-    description: '30 seconds, no vocals, punchy ending',
-    shortDescription: '30s ad with fast hook',
-    details: 'Creates attention-grabbing music that hooks listeners immediately, builds quickly, and ends with a memorable punch. Leaves space for voiceovers.',
+    description: '30 seconds, jingle or voiceover, button ending',
+    shortDescription: '30s hook, jingle or voiceover',
+    details: 'Creates attention-grabbing music that hooks listeners immediately, builds quickly, and ends with a memorable stinger. Flexible for catchy sung jingles (1-2 earworm phrases) or instrumental with voiceover space.',
     whenToChoose: [
       'Making short advertisements or promotional videos',
-      'Need background music that won\'t compete with voiceover',
+      'Want a catchy jingle with memorable taglines',
+      'Need instrumental with space for voiceover',
       'Creating content for social media platforms',
     ],
-    specs: { 'Length': '30 seconds', 'Vocals': 'None (voiceover-friendly)', 'Ending': 'Punchy button' },
+    specs: { 'Length': '30 seconds', 'Vocals': 'Flexible (jingle or voiceover space)', 'Ending': 'Stinger button' },
   },
   {
     value: 'standalone_song_mini',
@@ -266,13 +267,6 @@ export interface RecommendedCombo {
 }
 
 export const RECOMMENDED_COMBINATIONS: RecommendedCombo[] = [
-  {
-    useCase: 'Social Media Ad',
-    description: 'Catchy, energetic music for ads and promotional content',
-    blueprint: 'ad_brand_fast_hook',
-    sound: 'bright_pop_electro',
-    delivery: 'balanced_studio',
-  },
   {
     useCase: 'Podcast Background',
     description: 'Chill, unobtrusive background music for spoken content',
