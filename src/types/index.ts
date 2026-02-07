@@ -268,6 +268,13 @@ export interface RecommendedCombo {
 
 export const RECOMMENDED_COMBINATIONS: RecommendedCombo[] = [
   {
+    useCase: 'Social Media Ad',
+    description: 'Catchy, energetic clip for social media advertising',
+    blueprint: 'ad_brand_fast_hook',
+    sound: 'bright_pop_electro',
+    delivery: 'balanced_studio',
+  },
+  {
     useCase: 'Podcast Background',
     description: 'Chill, unobtrusive background music for spoken content',
     blueprint: 'podcast_voiceover_loop',
@@ -315,7 +322,7 @@ export const RECOMMENDED_COMBINATIONS: RecommendedCombo[] = [
     blueprint: 'standalone_song_mini',
     sound: 'bright_pop_electro',
     delivery: 'balanced_studio',
-  },
+  }
 ];
 
 /**

@@ -14,7 +14,7 @@ const knowledgeRetrievalClient = new KnowledgeRetrievalClient(
     credential
 );
 
-const query1 = `What is Challenger`;
+const query1 = process.argv[2] || `Does the backend code need changed`;
 const MAX_CHUNKS = 3;
 
 const retrievalRequest = {
